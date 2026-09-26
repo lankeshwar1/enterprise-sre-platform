@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-worker
+  namespace: sre-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sre-worker
+  template:
+    metadata:
+      labels:
+        app: sre-worker
+    spec:
+      containers:
+        - name: sre-worker
+          image: enterprise-sre-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-client
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-client
+                  key: password
+            - name: RABBITMQ_HOST
+              value: rabbitmq.rabbitmq.svc.cluster.local

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "amqplib": "^2.0.1",
     "express": "^5.2.1",
     "prom-client": "^15.1.3"
   },
