@@ -1,14 +1,53 @@
 const express = require("express");
 const client = require("prom-client");
 const amqp = require("amqplib");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const RABBITMQ_USER = process.env.RABBITMQ_USER || "guest";
-const RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD || "guest";
 const RABBITMQ_HOST =
   process.env.RABBITMQ_HOST || "localhost";
+
+function loadRabbitMQCredentials() {
+  const vaultSecretPath = "/vault/secrets/rabbitmq.json";
+
+  try {
+    if (fs.existsSync(vaultSecretPath)) {
+      const secret = JSON.parse(
+        fs.readFileSync(vaultSecretPath, "utf8")
+      );
+
+      if (secret.username && secret.password) {
+        console.log("RabbitMQ credentials loaded from Vault");
+
+        return {
+          username: secret.username,
+          password: secret.password,
+        };
+      }
+    }
+  } catch (error) {
+    console.error(
+      "Failed to load RabbitMQ credentials from Vault:",
+      error.message
+    );
+  }
+
+  console.log(
+    "Vault credentials unavailable, using environment variables"
+  );
+
+  return {
+    username: process.env.RABBITMQ_USER || "guest",
+    password: process.env.RABBITMQ_PASSWORD || "guest",
+  };
+}
+
+const {
+  username: RABBITMQ_USER,
+  password: RABBITMQ_PASSWORD,
+} = loadRabbitMQCredentials();
 
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL ||
